@@ -5,15 +5,26 @@ window.onload = function () {
     function initializeYouTubePlayer() {
         var ytPlayer;
         var msRefreshRate = 40;
+        var analyticsTimeout;
+
+        var replay = false;
+        var replayCount = 0;
+
 
         var previousVolume = 50; // "slash" initial volume
         var increasedVolume = false;
         var decreasedVolume = false;
+        var mutedimestamp = 0;
+        var mutedObjs = [];
+        var msTotalTimeMuted = 0;
         var mutedVideo = false;
 
+        var firstPlayBegun = false;
+
         var pausedVideo = false;
+        var pausedTimestamp = 0;
         var pauseObjs = [];
-        var totalTimePaused = 0;
+        var msTotalTimePaused = 0;
 
         window.onYouTubeIframeAPIReady = function () {
             console.log('onYouTubeIframeAPIReady');
@@ -42,15 +53,11 @@ window.onload = function () {
             console.log('onPlayerReady');
             ytPlayer.setVolume(previousVolume);
             ytPlayer.playVideo();
-            setTimeout(checkPlayerStatus, msRefreshRate);
+            analyticsTimeout = setTimeout(checkPlayerStatus, msRefreshRate);
         }
 
         function onApiChange(evt) {
             console.log('onApiChange');
-            var captions = ytPlayer.getOptions('captions', 'fontSize' );
-            console.log(captions);
-            for(var prop in captions)
-                console.log('captions[' + prop + '] = ' + captions[prop]);
         }
 
         function onPlayerStateChange(evt) {
@@ -62,12 +69,39 @@ window.onload = function () {
                     break;
                 case YT.PlayerState.ENDED:
                     console.log('YT.PlayerState.ENDED = ' + YT.PlayerState.ENDED);
+                    replay = true;
+                    clearTimeout(analyticsTimeout);
                     break;
                 case YT.PlayerState.PLAYING:
                     console.log('YT.PlayerState.PLAYING = ' + YT.PlayerState.PLAYING);
+                    if(!firstPlayBegun) {
+                        firstPlayBegun = true;
+                        mutedVideo = ytPlayer.isMuted();
+                    } else if(pausedVideo) {
+                        pausedVideo = false;
+                        var lastPauseObj = pauseObjs[pauseObjs.length - 1];
+                        lastPauseObj.totalTime = new Date().getTime() - pausedTimestamp;
+                        msTotalTimePaused += lastPauseObj.totalTime;
+                    } else if (replay) {
+                        console.log("REPLAY!");
+                        console.log("REPLAY!");
+                        console.log("REPLAY!");
+                        console.log("REPLAY!");
+                        console.log("REPLAY!");
+                        console.log("REPLAY!");
+                        replayCount++;
+                        analyticsTimeout = setTimeout(checkPlayerStatus, msRefreshRate);
+                    }
                     break;
                 case YT.PlayerState.PAUSED:
                     console.log('YT.PlayerState.PAUSED = ' + YT.PlayerState.PAUSED);
+                    pausedVideo = true;
+                    pausedTimestamp = new Date().getTime();
+                    var newPause = { 
+                        startTime: ytPlayer.getCurrentTime(),
+                        totalTime: 0
+                    };
+                    pauseObjs.push(newPause);
                     break;
                 case YT.PlayerState.CUED:
                     console.log('YT.PlayerState.CUED = ' + YT.PlayerState.CUED);
@@ -76,20 +110,54 @@ window.onload = function () {
         }
 
         function checkPlayerStatus() {
-            var currentVolume = ytPlayer.getVolume();
-           
-            if(currentVolume > previousVolume) {
-                increasedVolume = true;
-            } else if(currentVolume < previousVolume) {
-                decreasedVolume  = true;
-            }
+             //if this is the first time we pick up a mute
+            if(ytPlayer.isMuted()) {
+                if(!mutedVideo) {
+                    mutedVideo = true;
+                    mutedTimestamp = new Date().getTime();
+                    console.log('mutedTimestamp = ' + mutedTimestamp);
+                    var newMute = { 
+                        startTime: ytPlayer.getCurrentTime(),
+                        totalTime: 0
+                    };
+                    mutedObjs.push(newMute);
+                    previousVolume = 0;
+                } else {
+                    // do nothing but wait
+                }
+            } else {
+                var currentVolume = ytPlayer.getVolume();
+                console.log("currentVolume = " + currentVolume);
+               
+                if(currentVolume > previousVolume) {
+                    increasedVolume = true;
+                } else if(currentVolume < previousVolume) {
+                    decreasedVolume  = true;
+                }
 
-            if(currentVolume === 0) {
-                mutedVideo = true;
-            }
+                //if this is the first time we pick up a mute
+                if(currentVolume === 0 && !mutedVideo) {
+                    mutedVideo = true;
+                    mutedTimestamp = new Date().getTime();
+                    //console.log('mutedTimestamp = ' + mutedTimestamp);
+                    var newMute = { 
+                        startTime: ytPlayer.getCurrentTime(),
+                        totalTime: 0
+                    };
+                    mutedObjs.push(newMute);
+                //if this is the first time since muting the video that the volume goes up
+                } else if (previousVolume === 0 && currentVolume > 0) {
+                    mutedVideo = false;
+                    var lastMuteObj = mutedObjs[mutedObjs.length - 1];
+                    mutedObjs.totalTime = new Date().getTime() - mutedTimestamp;
+                    msTotalTimeMuted += mutedObjs.totalTime;
 
-            previousVolume = currentVolume;
-            setTimeout(checkPlayerStatus, msRefreshRate);
+                    console.log('msTotalTimeMuted = ' + msTotalTimeMuted)
+                }
+
+                previousVolume = currentVolume;
+            }
+            analyticsTimeout = setTimeout(checkPlayerStatus, msRefreshRate);
         }
     }
 
