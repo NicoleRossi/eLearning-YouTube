@@ -1,0 +1,49 @@
+body {
+    font-family: Helvetica, sans-serif;
+    max-width: 640px;
+}
+
+#youtubePlayer {
+    width: 640px;
+    height: 360px;
+}
+
+#followup_question {
+    width: 640px;
+    height: auto;
+    display: none;
+}
+
+.table {
+    width: 640px;
+    height: auto;
+}
+
+.fraction, .column_header  {
+    float: left;
+    width: 300px;
+    padding-right: 16px;
+    background-color: #fff;
+}
+
+.quarter {
+    width: 73px;
+    height: 51px;
+    border: 1px #999 solid;
+    float: left;
+    margin-top: 8px;
+}
+
+.colored {
+    background-color: #099;
+}
+
+.whole {
+    width: 300px;
+    height: auto;
+    cursor: pointer;
+}
+
+#submit_btn {
+    margin-top: 16px;
+}
