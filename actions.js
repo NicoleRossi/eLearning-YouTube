@@ -1,30 +1,92 @@
 window.onload = function () {
-    initializeYouTubePlayer ();
-    watchMouseMovement();
+    var correctAnswer = false;
+    
 
-    function initializeYouTubePlayer() {
+    function initializeCoins() {
+        var submitBtn = document.getElementById('submit_btn');
+        var purse = document.getElementById('purse');
+        var countertop = document.getElementById('countertop');
+        
+        var coins = document.getElementsByClassName('coin');
+        var totalCoins = coins.length;
+        for(var i = 0; i < totalCoins; i++) {
+            coins[i].addEventListener('dragstart', startDraggingCoin);
+        }
+
+        purse.addEventListener('dragover', allowCoinDrop);
+        purse.addEventListener('drop', dropCoin);
+
+        countertop.addEventListener('dragover', allowCoinDrop);
+        countertop.addEventListener('drop', dropCoin);
+
+        submitBtn.addEventListener('click', checkAnswer);
+
+        function startDraggingCoin(evt) {
+            evt.dataTransfer.setData('coin', evt.target.parentNode.id);
+        }
+
+        function allowCoinDrop(evt) {
+            evt.preventDefault();
+        }
+
+        function dropCoin(evt) {
+            evt.preventDefault();
+            var data = evt.dataTransfer.getData('coin');
+            console.log("data = " + data);
+            evt.target.appendChild(document.getElementById(data));
+        }
+
+        function checkAnswer(evt) {
+            var selectedCoins = countertop.getElementsByClassName('coin');
+            var totalCoins = selectedCoins.length;
+            var totalCents = 0;
+            for(var i = 0; i < totalCoins; i++) {
+                var coinType = selectedCoins[i].childNodes[1].className;
+                console.log('coinType = ')
+                console.log(coinType);
+                switch(coinType) {
+                    case 'penny':
+                        totalCents += 1;
+                        break;
+                    case 'nickel':
+                        totalCents += 5;
+                        break;
+                    case 'dime':
+                        totalCents += 10;
+                        break;
+                    case 'quarter':
+                        totalCents += 25;
+                        break;
+                }
+            }
+            correctAnswer = (totalCents === 13);
+        }
+    }
+
+    var youtubeAnalytics = {
+        replay: false,
+        replayCount: 0,
+        previousVolume: 50, // "slash" initial volume
+        increasedVolume: false,
+        decreasedVolume: false,
+        mutedObjs: [],
+        msTotalTimeMuted: 0,
+        mutedVideo: false,
+        pausedVideo: false,
+        pauseObjs: [],
+        msTotalTimePaused: 0
+    };
+    youtubeAnalytics.initializeYouTubePlayer = function () {
+        var context = this;
+
         var ytPlayer;
         var msRefreshRate = 40;
         var analyticsTimeout;
 
-        var replay = false;
-        var replayCount = 0;
-
-
-        var previousVolume = 50; // "slash" initial volume
-        var increasedVolume = false;
-        var decreasedVolume = false;
         var mutedimestamp = 0;
-        var mutedObjs = [];
-        var msTotalTimeMuted = 0;
-        var mutedVideo = false;
-
-        var firstPlayBegun = false;
-
-        var pausedVideo = false;
         var pausedTimestamp = 0;
-        var pauseObjs = [];
-        var msTotalTimePaused = 0;
+        
+        var firstPlayBegun = false;
 
         window.onYouTubeIframeAPIReady = function () {
             console.log('onYouTubeIframeAPIReady');
@@ -33,9 +95,9 @@ window.onload = function () {
                 width: '640',
                 videoId: 'iZZ580bieKo',
                 events: {
-                    'onReady': onPlayerReady,
-                    'onStateChange': onPlayerStateChange,
-                    'onApiChange': onApiChange
+                    'onReady': onPlayerReady.bind(context),
+                    'onStateChange': onPlayerStateChange.bind(context),
+                    'onApiChange': onApiChange.bind(context)
                 }
             });
         }
@@ -51,9 +113,9 @@ window.onload = function () {
 
         function onPlayerReady(evt) {
             console.log('onPlayerReady');
-            ytPlayer.setVolume(previousVolume);
+            ytPlayer.setVolume(this.previousVolume);
             ytPlayer.playVideo();
-            analyticsTimeout = setTimeout(checkPlayerStatus, msRefreshRate);
+            analyticsTimeout = setTimeout(checkPlayerStatus.bind(context), msRefreshRate);
         }
 
         function onApiChange(evt) {
@@ -69,39 +131,39 @@ window.onload = function () {
                     break;
                 case YT.PlayerState.ENDED:
                     console.log('YT.PlayerState.ENDED = ' + YT.PlayerState.ENDED);
-                    replay = true;
+                    this.replay = true;
                     clearTimeout(analyticsTimeout);
                     break;
                 case YT.PlayerState.PLAYING:
                     console.log('YT.PlayerState.PLAYING = ' + YT.PlayerState.PLAYING);
                     if(!firstPlayBegun) {
                         firstPlayBegun = true;
-                        mutedVideo = ytPlayer.isMuted();
-                    } else if(pausedVideo) {
-                        pausedVideo = false;
-                        var lastPauseObj = pauseObjs[pauseObjs.length - 1];
+                        this.mutedVideo = ytPlayer.isMuted();
+                    } else if(this.pausedVideo) {
+                        this.pausedVideo = false;
+                        var lastPauseObj = this.pauseObjs[this.pauseObjs.length - 1];
                         lastPauseObj.totalTime = new Date().getTime() - pausedTimestamp;
-                        msTotalTimePaused += lastPauseObj.totalTime;
-                    } else if (replay) {
+                        this.msTotalTimePaused += lastPauseObj.totalTime;
+                    } else if (this.replay) {
                         console.log("REPLAY!");
                         console.log("REPLAY!");
                         console.log("REPLAY!");
                         console.log("REPLAY!");
                         console.log("REPLAY!");
                         console.log("REPLAY!");
-                        replayCount++;
-                        analyticsTimeout = setTimeout(checkPlayerStatus, msRefreshRate);
+                        this.replayCount++;
+                        analyticsTimeout = setTimeout(checkPlayerStatus.bind(this), msRefreshRate);
                     }
                     break;
                 case YT.PlayerState.PAUSED:
                     console.log('YT.PlayerState.PAUSED = ' + YT.PlayerState.PAUSED);
-                    pausedVideo = true;
+                    this.pausedVideo = true;
                     pausedTimestamp = new Date().getTime();
                     var newPause = { 
                         startTime: ytPlayer.getCurrentTime(),
                         totalTime: 0
                     };
-                    pauseObjs.push(newPause);
+                    this.pauseObjs.push(newPause);
                     break;
                 case YT.PlayerState.CUED:
                     console.log('YT.PlayerState.CUED = ' + YT.PlayerState.CUED);
@@ -112,52 +174,52 @@ window.onload = function () {
         function checkPlayerStatus() {
              //if this is the first time we pick up a mute
             if(ytPlayer.isMuted()) {
-                if(!mutedVideo) {
-                    mutedVideo = true;
+                console.log("this.mutedVideo");
+                console.log(this.mutedVideo);
+
+                if(!this.mutedVideo) {
+                    this.mutedVideo = true;
                     mutedTimestamp = new Date().getTime();
-                    console.log('mutedTimestamp = ' + mutedTimestamp);
+                    
                     var newMute = { 
                         startTime: ytPlayer.getCurrentTime(),
                         totalTime: 0
                     };
-                    mutedObjs.push(newMute);
-                    previousVolume = 0;
+                    this.mutedObjs.push(newMute);
+                    this.previousVolume = 0;
                 } else {
                     // do nothing but wait
                 }
             } else {
                 var currentVolume = ytPlayer.getVolume();
-                console.log("currentVolume = " + currentVolume);
-               
-                if(currentVolume > previousVolume) {
-                    increasedVolume = true;
-                } else if(currentVolume < previousVolume) {
-                    decreasedVolume  = true;
+                
+                if(currentVolume > this.previousVolume) {
+                    this.increasedVolume = true;
+                } else if(currentVolume < this.previousVolume) {
+                    this.decreasedVolume  = true;
                 }
 
                 //if this is the first time we pick up a mute
-                if(currentVolume === 0 && !mutedVideo) {
-                    mutedVideo = true;
+                if(currentVolume === 0 && !this.mutedVideo) {
+                    this.mutedVideo = true;
                     mutedTimestamp = new Date().getTime();
                     //console.log('mutedTimestamp = ' + mutedTimestamp);
                     var newMute = { 
                         startTime: ytPlayer.getCurrentTime(),
                         totalTime: 0
                     };
-                    mutedObjs.push(newMute);
-                //if this is the first time since muting the video that the volume goes up
-                } else if (previousVolume === 0 && currentVolume > 0) {
-                    mutedVideo = false;
-                    var lastMuteObj = mutedObjs[mutedObjs.length - 1];
-                    mutedObjs.totalTime = new Date().getTime() - mutedTimestamp;
-                    msTotalTimeMuted += mutedObjs.totalTime;
-
-                    console.log('msTotalTimeMuted = ' + msTotalTimeMuted)
+                    this.mutedObjs.push(newMute);
+                //if this is the first time since muting the video context the volume goes up
+                } else if (this.previousVolume === 0 && currentVolume > 0) {
+                    this.mutedVideo = false;
+                    var lastMuteObj = this.mutedObjs[this.mutedObjs.length - 1];
+                    this.mutedObjs.totalTime = new Date().getTime() - mutedTimestamp;
+                    this.msTotalTimeMuted += this.mutedObjs.totalTime;
                 }
 
-                previousVolume = currentVolume;
+                this.previousVolume = currentVolume;
             }
-            analyticsTimeout = setTimeout(checkPlayerStatus, msRefreshRate);
+            analyticsTimeout = setTimeout(checkPlayerStatus.bind(context), msRefreshRate);
         }
     }
 
@@ -182,4 +244,8 @@ window.onload = function () {
             }
         };
     }
+
+    youtubeAnalytics.initializeYouTubePlayer();
+    initializeCoins();
+    watchMouseMovement();
 };
