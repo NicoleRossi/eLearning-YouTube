@@ -1,0 +1,31 @@
+body {
+    font-family: Helvetica, sans-serif;
+    max-width: 640px;
+}
+
+#youtubePlayer {
+    width: 640px;
+    height: 360px;
+}
+
+#followup_question {
+    width: 640px;
+    height: auto;
+    display: none;
+}
+
+#purse, #countertop, .column_header  {
+    float: left;
+    width: 318px;
+    height: 478px;
+    background-color: #fff;
+    border: 1px #000 solid;
+}
+
+.column_header {
+    height: auto;
+}
+
+.coin {
+    cursor: pointer;
+}
