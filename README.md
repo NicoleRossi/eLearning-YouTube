@@ -12,7 +12,7 @@ Analytics for YouTube-based eLearning
   * drag and drop numbers to the "calculation box" to see the multiplication result below
   * draws on multiplication table knowledge
  
-* For each user experience, click "Done" when complete.  If you are correct, the JSON analytics (see belore) display in an alert; otherwise the alert displays "Try again!"
+* For each user experience, click "Done" when complete.  If you are correct, the JSON analytics (see below) display in an alert; otherwise the alert displays "Try again!"
   
 # How to Read JSON labels
 * **decreasedVolume**
