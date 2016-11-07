@@ -46,5 +46,5 @@ Analytics for YouTube-based eLearning
       * When in the video did the user resume playback?
 * **quartiles**
   * Properties vary with video length; each property represents the video position for 25%, 50%, 75%, and 100% playback (true/false)
-* **replayCount **
+* **replayCount**
   * How many times did the user replay the video? (0+)
