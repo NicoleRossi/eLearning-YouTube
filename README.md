@@ -12,7 +12,7 @@ Analytics for YouTube-based eLearning
   * drag and drop numbers to the "calculation box" to see the multiplication result below
   * draws on multiplication table knowledge
 
-* Please pretend the provided video has something to do with the mathematical topics at hand!
+* Please pretend the provided video has something to do with the mathematical topics at hand; if you're not a fan of dogs or Subaru, you can provide a Youtube video ID to `YoutubeAnalytics.initializeYouTubePlayer();` in associated .js file.
 * For each user experience, click "Done" when complete.  If you are correct, the JSON analytics (see below) display in an alert; otherwise the alert displays "Try again!"
   
 # How to Read JSON labels
